@@ -121,9 +121,10 @@ Exchange Team.
 </body> 
 </html> 
 "@ 
- 
-$smtp = New-Object Net.Mail.SmtpClient($smtpServer)
-$smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
+
+Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer
+# $smtp = New-Object Net.Mail.SmtpClient($smtpServer)
+# $smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
 }
 
 # Install the client
