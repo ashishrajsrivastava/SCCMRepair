@@ -1,10 +1,9 @@
 ﻿# ================================================================================================
 # NAME: SCCMRepair.ps1
-# AUTHOR: Steven Bart, https://stevenbart.com
-#
-# VERSION: 1905
+# AUTHOR: Ashish Raj, azuredevopspro.com
+# VERSION: 1906
 # COMMENTS: This script repair uninstall the SCCM Client, Repair the WMI Repository 
-# and Reinstall the SCCM Client, it's basic, but work fine !
+# and notify to admin via email
 # Don't forget to download WMIRepair and configure the script (see above)
 # PowerShell 3.0 require
 # The WMIRepair.exe require .NET Framework 3.5
@@ -26,7 +25,12 @@ $PathScript = Split-Path -Parent $PSCommandPath # Path of the current script
 $LocalSCCMClient = "C:\Windows\ccmsetup\ccmsetup.exe" # Path of the Source of SCCM Client (on local computer)
 $RemoteSCCMClient = "\\srv-sccm\Client\ccmsetup.exe" # Path of the Source of SCCM Client (from Server)
 $SCCMSiteCode = "LAB" # SCCM Site Code
-$wmiRepair = "$PathScript\wmirepair.exe" 
+$wmiRepair = "$PathScript\wmirepair.exe"
+
+$smtpServer = "ho-ex2010-caht1.exchangeserverpro.net"
+$smtpFrom = "reports@exchangeserverpro.net"
+$smtpTo = "youremailaddress@abc.com"
+$messageSubject = "SCCM Uninstalled on $env:COMPUTERNAME"
 #
 # Please put WMIRepair.exe and WMIRepair.exe.config in the same folder of this script
 # It can be downloaded from https://sourceforge.net/projects/smsclictr/files/latest/download
@@ -88,7 +92,7 @@ Start-Process -FilePath $wmiRepair -ArgumentList "/CMD" -Wait
 # Clear ccmsetup folder
 Write-Host "Clean local ccmsetup folder..."
 Remove-Item -Path C:\Windows\ccmsetup\* -Recurse -ErrorAction SilentlyContinue
- 
+
 # Get the current ccmsetup.exe from the Site Server
 Write-Host "Copy a fresh copy of ccmsetup.exe from Site Server..."
 Copy-Item -Path $RemoteSCCMClient -Destination C:\Windows\ccmsetup -ErrorAction SilentlyContinue
@@ -97,9 +101,28 @@ Copy-Item -Path $RemoteSCCMClient -Destination C:\Windows\ccmsetup -ErrorAction 
 Write-Host "Waiting 10 seconds for rebuild the Repository..."
 Sleep -Seconds 10
 
-# Install the client
-Write-Host "Install SCCM Client on Site Code:$SCCMSiteCode..." 
-Start-Process -FilePath $LocalSCCMClient -ArgumentList "smssitecode=$SCCMSiteCode" -Wait
+#Notify with email
+if (Test-Path -Path "C:\Windows\ccmsetup\ccmsetup.exe") 
+{
+Write-Host "Successfully uninstalled ccm client and copied fresh copy from server"
+$htmlbody = @" 
+<html> 
+<body style="font-family:verdana;font-size:13"> 
+Hello Team<br> 
+<span style="color:red;font-family:calibri;font-size:15">SCCM Client on machine $env:COMPUTERNAME has been uninstalled!</span> <br> <br> 
+Thanks, <br> 
+Exchange Team. 
+</body> 
+</html> 
+"@ 
+ 
+$smtp = New-Object Net.Mail.SmtpClient($smtpServer)
+$smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
+}
 
-$SCCMInstallTime = Get-Item -Path C:\Windows\ccmsetup\ccmsetup.cab | Select-Object -Property CreationTime
-Write-Host "SCCM Client Installed on $SCCMInstallTime"
+# Install the client
+#Write-Host "Install SCCM Client on Site Code:$SCCMSiteCode..." 
+# Start-Process -FilePath $LocalSCCMClient -ArgumentList "smssitecode=$SCCMSiteCode" -Wait
+
+# $SCCMInstallTime = Get-Item -Path C:\Windows\ccmsetup\ccmsetup.cab | Select-Object -Property CreationTime
+# Write-Host "SCCM Client Installed on $SCCMInstallTime"
