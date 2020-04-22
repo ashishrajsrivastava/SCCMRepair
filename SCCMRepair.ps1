@@ -23,7 +23,8 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 #
 $PathScript = Split-Path -Parent $PSCommandPath # Path of the current script
 $LocalSCCMClient = "C:\Windows\ccmsetup\ccmsetup.exe" # Path of the Source of SCCM Client (on local computer)
-$RemoteSCCMClient = "\\srv-sccm\Client\ccmsetup.exe" # Path of the Source of SCCM Client (from Server)
+$RemoteSCCMClient = "C:\Windows\ccmsetup\ccmsetup.exe" # Path of the Source of SCCM Client (from Server)
+$NewSCCMClientLocation = "C:\NewccmsetupMedia"
 $SCCMSiteCode = "LAB" # SCCM Site Code
 $wmiRepair = "$PathScript\wmirepair.exe"
 
@@ -95,14 +96,14 @@ Remove-Item -Path C:\Windows\ccmsetup\* -Recurse -ErrorAction SilentlyContinue
 
 # Get the current ccmsetup.exe from the Site Server
 Write-Host "Copy a fresh copy of ccmsetup.exe from Site Server..."
-Copy-Item -Path $RemoteSCCMClient -Destination C:\Windows\ccmsetup -ErrorAction SilentlyContinue
+Copy-Item -Path $RemoteSCCMClient -Destination (New-Item -Path $NewSCCMClientLocation -ItemType Directory -Force) -ErrorAction SilentlyContinue
 
 # Sleep 10 seconds to allow the WMI Repository to Rebuild
 Write-Host "Waiting 10 seconds for rebuild the Repository..."
 Sleep -Seconds 10
 
 #Notify with email
-if (Test-Path -Path "C:\Windows\ccmsetup\ccmsetup.exe") 
+if (Test-Path -Path $NewSCCMClientLocation) 
 {
 Write-Host "Successfully uninstalled ccm client and copied fresh copy from server"
 $htmlbody = @" 
