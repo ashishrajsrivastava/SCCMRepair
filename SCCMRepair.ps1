@@ -40,6 +40,11 @@ $messageSubject = "SCCM Uninstalled on $env:COMPUTERNAME"
 #
 # ================================================================================================
 
+# Get the current ccmsetup.exe to diffenerent location 
+Write-Host "Copy ccmsetup.exe from $LocalSCCMClient to $NewSCCMClientLocation"
+Copy-Item -Path $RemoteSCCMClient -Destination (New-Item -Path $NewSCCMClientLocation -ItemType Directory -Force) -ErrorAction SilentlyContinue
+
+
 If(Test-Path $LocalSCCMClient -ErrorAction SilentlyContinue)
 {
     # Uninstall the SCCM Client
@@ -95,8 +100,8 @@ Write-Host "Clean local ccmsetup folder..."
 Remove-Item -Path C:\Windows\ccmsetup\* -Recurse -ErrorAction SilentlyContinue
 
 # Get the current ccmsetup.exe from the Site Server
-Write-Host "Copy a fresh copy of ccmsetup.exe from Site Server..."
-Copy-Item -Path $RemoteSCCMClient -Destination (New-Item -Path $NewSCCMClientLocation -ItemType Directory -Force) -ErrorAction SilentlyContinue
+#Write-Host "Copy a fresh copy of ccmsetup.exe from Site Server..."
+#Copy-Item -Path $RemoteSCCMClient -Destination (New-Item -Path $NewSCCMClientLocation -ItemType Directory -Force) -ErrorAction SilentlyContinue
 
 # Sleep 10 seconds to allow the WMI Repository to Rebuild
 Write-Host "Waiting 10 seconds for rebuild the Repository..."
@@ -105,7 +110,7 @@ Sleep -Seconds 10
 #Notify with email
 if (Test-Path -Path $NewSCCMClientLocation) 
 {
-Write-Host "Successfully uninstalled ccm client and copied fresh copy from server"
+Write-Host "Successfully copied ccmsetup.exe to $NewSCCMClientLocation and uninstalled ccm client"
 $htmlbody = @" 
 <html> 
 <body style="font-family:verdana;font-size:13"> 
