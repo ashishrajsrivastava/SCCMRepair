@@ -28,9 +28,12 @@ $NewSCCMClientLocation = "C:\NewccmsetupMedia"
 $SCCMSiteCode = "LAB" # SCCM Site Code
 $wmiRepair = "$PathScript\wmirepair.exe"
 
-$smtpServer = "ho-ex2010-caht1.exchangeserverpro.net"
-$smtpFrom = "reports@exchangeserverpro.net"
-$smtpTo = "youremailaddress@abc.com"
+$smtpServer = "smtp.office365.com"
+$smtpusername = "yoursmtpusername@abc.com"
+$smtppassword = "YourSMTPPassword"|ConvertTo-SecureString -AsPlainText -Force
+$cred = New-Object pscredential($smtpusername, $smtppassword)
+$smtpFrom = "from@abc.com"
+$smtpTo = "to@abc.com"
 $messageSubject = "SCCM Uninstalled on $env:COMPUTERNAME"
 #
 # Please put WMIRepair.exe and WMIRepair.exe.config in the same folder of this script
@@ -122,7 +125,7 @@ Exchange Team.
 </html> 
 "@ 
 
-Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer
+Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer -Credential $cred -UseSsl -BodyAsHtml
 # $smtp = New-Object Net.Mail.SmtpClient($smtpServer)
 # $smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
 }
