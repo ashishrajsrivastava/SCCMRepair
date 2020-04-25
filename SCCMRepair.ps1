@@ -11,10 +11,9 @@
 # ================================================================================================
 
 # Relaunch as an elevated process
-If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-{
-  Start-Process powershell.exe "-File",('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
-  exit
+If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process powershell.exe "-File", ('"{0}"' -f $MyInvocation.MyCommand.Path) -Verb RunAs
+    exit
 }
 
 # ================================================================================================
@@ -30,7 +29,7 @@ $wmiRepair = "$PathScript\wmirepair.exe"
 
 $smtpServer = "smtp.office365.com"
 $smtpusername = "yoursmtpusername@abc.com"
-$smtppassword = "YourSMTPPassword"|ConvertTo-SecureString -AsPlainText -Force
+$smtppassword = "YourSMTPPassword" | ConvertTo-SecureString -AsPlainText -Force
 $cred = New-Object pscredential($smtpusername, $smtppassword)
 $smtpFrom = "from@abc.com"
 $smtpTo = "to@abc.com"
@@ -48,8 +47,7 @@ Write-Host "Copy ccmsetup.exe from $LocalSCCMClient to $NewSCCMClientLocation"
 Copy-Item -Path $RemoteSCCMClient -Destination (New-Item -Path $NewSCCMClientLocation -ItemType Directory -Force) -ErrorAction SilentlyContinue
 
 
-If(Test-Path $LocalSCCMClient -ErrorAction SilentlyContinue)
-{
+If (Test-Path $LocalSCCMClient -ErrorAction SilentlyContinue) {
     # Uninstall the SCCM Client
     Write-Host "Removing SCCM Client..."
     Start-Process -FilePath $LocalSCCMClient -ArgumentList "/uninstall" -Wait
@@ -65,11 +63,10 @@ Write-Host "Waiting 10 seconds..."
 Sleep -Seconds 10
  
 # Remove old backup
-If(Test-Path C:\Windows\System32\wbem\repository.old -ErrorAction SilentlyContinue)
-    {
-        Write-Host "Removing old Repository backup..."
-        Remove-Item -Path C:\Windows\System32\wbem\repository.old -Recurse -Force -ErrorAction SilentlyContinue
-    }
+If (Test-Path C:\Windows\System32\wbem\repository.old -ErrorAction SilentlyContinue) {
+    Write-Host "Removing old Repository backup..."
+    Remove-Item -Path C:\Windows\System32\wbem\repository.old -Recurse -Force -ErrorAction SilentlyContinue
+}
  
 # Rename the existing repository directory.
 Write-Host "Renaming the Repository..."
@@ -111,10 +108,9 @@ Write-Host "Waiting 10 seconds for rebuild the Repository..."
 Sleep -Seconds 10
 
 #Notify with email
-if (Test-Path -Path $NewSCCMClientLocation) 
-{
-Write-Host "Successfully copied ccmsetup.exe to $NewSCCMClientLocation and uninstalled ccm client"
-$htmlbody = @" 
+if (Test-Path -Path $NewSCCMClientLocation) {
+    Write-Host "Successfully copied ccmsetup.exe to $NewSCCMClientLocation and uninstalled ccm client"
+    $htmlbody = @" 
 <html> 
 <body style="font-family:verdana;font-size:13"> 
 Hello Team<br> 
@@ -125,9 +121,9 @@ Exchange Team.
 </html> 
 "@ 
 
-Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer -Credential $cred -UseSsl -BodyAsHtml
-# $smtp = New-Object Net.Mail.SmtpClient($smtpServer)
-# $smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
+    Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer -Credential $cred -UseSsl -BodyAsHtml
+    # $smtp = New-Object Net.Mail.SmtpClient($smtpServer)
+    # $smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
 }
 
 # Install the client
