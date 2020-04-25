@@ -127,8 +127,26 @@ Exchange Team.
 }
 
 # Install the client
-#Write-Host "Install SCCM Client on Site Code:$SCCMSiteCode..." 
-# Start-Process -FilePath $LocalSCCMClient -ArgumentList "smssitecode=$SCCMSiteCode" -Wait
+Write-Host "Install SCCM Client on Site Code:$SCCMSiteCode..." 
+Start-Process -FilePath $$NewSCCMClientLocation = "C:\NewccmsetupMedia\ccmsetup.exe" -ArgumentList "smssitecode=$SCCMSiteCode" -Wait
 
-# $SCCMInstallTime = Get-Item -Path C:\Windows\ccmsetup\ccmsetup.cab | Select-Object -Property CreationTime
-# Write-Host "SCCM Client Installed on $SCCMInstallTime"
+$SCCMInstallTime = Get-Item -Path C:\Windows\ccmsetup\ccmsetup.cab | Select-Object -Property CreationTime
+Write-Host "SCCM Client Installed on $SCCMInstallTime"
+#Notify with email for install
+if (Test-Path -Path $LocalSCCMClient) {
+    Write-Host "Successfully copied ccmsetup.exe to $LocalSCCMClient and installed ccm client"
+    $htmlbody = @" 
+<html> 
+<body style="font-family:verdana;font-size:13"> 
+Hello Team<br> 
+<span style="color:red;font-family:calibri;font-size:15">SCCM Client on machine $env:COMPUTERNAME has been installed!</span> <br> <br> 
+Thanks, <br> 
+Exchange Team. 
+</body> 
+</html> 
+"@ 
+
+    Send-MailMessage -Body $htmlbody -Subject $messagesubject -To $smtpTo -From $smtpFrom -SmtpServer $smtpServer -Credential $cred -UseSsl -BodyAsHtml
+    # $smtp = New-Object Net.Mail.SmtpClient($smtpServer)
+    # $smtp.Send($smtpFrom,$smtpTo,$messagesubject,$htmlbody)
+}
